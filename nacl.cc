@@ -102,7 +102,7 @@ void shuffle(const vector<int>& vmin, const vector<int>& vmax, vector<vector<dou
 
         for (size_t i = 0; i < values.size(); ++i) {
             for (size_t j = 0; j < vmin.size(); ++j) {
-                values[i][j] += 4e-4 * canonical_fast() * cnt[j] * cnt[j] * cnt[j];
+                values[i][j] += 2e-4 * canonical_fast() * cnt[j] * cnt[j] * cnt[j];
             }
         }
     }
