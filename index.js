@@ -208,9 +208,9 @@ function parse(text) {
     }
 
     res = {
-        'vmin': vmin,
-        'vmax': vmax,
-        'wishes': wishes
+        vmin: vmin,
+        vmax: vmax,
+        wishes: wishes
     };
 
     return [res, errors];
@@ -247,6 +247,16 @@ CodeMirror.registerHelper("lint", "csv", function(text) {
     return parse(text)[1];
 });
 
+function shuffle(a) {
+    var j, x, i;
+    for (i = a.length; i; i--) {
+        j = Math.floor(Math.random() * i);
+        x = a[i - 1];
+        a[i - 1] = a[j];
+        a[j] = x;
+    }
+}
+
 function action(wishes, results) {
     score = 0;
     for (i = 0; i < wishes.length; ++i) {
@@ -261,7 +271,10 @@ outputCode = null;
 function button_pressed() {
     text = inputCode.getValue();
     out = parse(text);
-    if (out[1].length === 0) {
+    if (out[1].length > 0) {
+        inputCode.focus();
+        inputCode.setCursor(out[1][0].from);
+    } else {
         vmin = out[0].vmin;
         vmax = out[0].vmax;
         wishes = out[0].wishes;
@@ -274,6 +287,12 @@ function button_pressed() {
         for (i = 0; i < vmax.length; ++i) {
             vmax_tot += vmax[i];
         }
+
+        permutation = [];
+        for (i = 0; i < wishes.length; ++i) {
+            permutation.push(i);
+        }
+        shuffle(permutation);
 
         cost = [];
         x = Math.pow(vmin.length, 2);
@@ -289,7 +308,7 @@ function button_pressed() {
                     row.push(x + c);
                 }
             }
-            cost.push(row);
+            cost[permutation[i]] = row;
         }
 
         // append virtual studdent at the end
@@ -307,18 +326,23 @@ function button_pressed() {
         }
 
         var h = new Hungarian(cost);
-        var result = h.execute();
+        var s = h.execute();
 
-        result.length = wishes.length;
-        for (i = 0; i < result.length; ++i) {
+        s.length = wishes.length;
+        for (i = 0; i < s.length; ++i) {
             for (j = 0; j < vmax.length; ++j) {
-                if (result[i] >= vmax[j]) {
-                    result[i] -= vmax[j];
+                if (s[i] >= vmax[j]) {
+                    s[i] -= vmax[j];
                 } else {
-                    result[i] = j;
+                    s[i] = j;
                     break;
                 }
             }
+        }
+
+        result = [];
+        for (i = 0; i < wishes.length; ++i) {
+            result[i] = s[permutation[i]];
         }
 
         score = action(wishes, result);
