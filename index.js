@@ -8,7 +8,9 @@ function parse(text) {
 
     vmin = null;
     vmax = null;
-    wishes = [];
+    wishes = null;
+
+    vmin_pos = null;
 
     vmin_sum = 0;
     vmax_sum = 0;
@@ -46,6 +48,7 @@ function parse(text) {
     }
 
     function eat_row() {
+        var cc;
         if (!is_digit(ch)) {
             cc = c;
             skip_line();
@@ -90,6 +93,7 @@ function parse(text) {
                 return;
             }
             row.push(x);
+            cc = c;
             while (is_space(ch)) {
                 eat();
             }
@@ -112,13 +116,17 @@ function parse(text) {
         if (vmin !== null && vmin.length !== row.length) {
             errors.push({
                 from: CodeMirror.Pos(l, 0),
-                to: CodeMirror.Pos(l, c),
+                to: CodeMirror.Pos(l, cc),
                 message: "All the lines must contain the same amount of values"
             });
             return;
         }
         if (vmin === null) {
             vmin = row;
+            vmin_pos = {
+                line: l,
+                column: cc
+            };
             vmin_sum = 0;
             for (i = 0; i < vmin.length; ++i) {
                 vmin_sum += vmin[i];
@@ -133,17 +141,20 @@ function parse(text) {
                 if (vmax[i] < vmin[i]) {
                     errors.push({
                         from: CodeMirror.Pos(l, 0),
-                        to: CodeMirror.Pos(l, c),
+                        to: CodeMirror.Pos(l, cc),
                         message: "vmax must be greater or equal than vmin"
                     });
                 }
             }
         } else {
+            if (wishes === null) {
+                wishes = [];
+            }
             wishes.push(row);
             if (wishes.length > vmax_sum) {
                 errors.push({
                     from: CodeMirror.Pos(l, 0),
-                    to: CodeMirror.Pos(l, c),
+                    to: CodeMirror.Pos(l, cc),
                     message: "vmax is too small or there is too much entries"
                 });
             }
@@ -153,7 +164,8 @@ function parse(text) {
                 if (tmp[i] > i) {
                     errors.push({
                         from: CodeMirror.Pos(l, 0),
-                        to: CodeMirror.Pos(l, c),
+                        to: CodeMirror.Pos(l, cc),
+                        severity: "warning",
                         message: "This wish is not fair"
                     });
                     break;
@@ -199,10 +211,28 @@ function parse(text) {
         eat_line();
     }
 
-    if (wishes.length < vmin_sum) {
+    if (vmin === null) {
         errors.push({
-            from: CodeMirror.Pos(0, 0),
-            to: CodeMirror.Pos(l, c),
+            from: CodeMirror.Pos(l, 0),
+            to: CodeMirror.Pos(l, 0),
+            message: "vmin expected"
+        });
+    } else if (vmax === null) {
+        errors.push({
+            from: CodeMirror.Pos(l, 0),
+            to: CodeMirror.Pos(l, 0),
+            message: "vmax expected"
+        });
+    } else if (wishes === null) {
+        errors.push({
+            from: CodeMirror.Pos(l, 0),
+            to: CodeMirror.Pos(l, 0),
+            message: "wishes expected"
+        });
+    } else if (wishes.length < vmin_sum) {
+        errors.push({
+            from: CodeMirror.Pos(vmin_pos.line, 0),
+            to: CodeMirror.Pos(vmin_pos.line, vmin_pos.column),
             message: "vmin is too high for the amount of entries"
         });
     }
@@ -288,7 +318,15 @@ outputCode = null;
 function button_pressed() {
     text = inputCode.getValue();
     out = parse(text);
-    if (out[1].length > 0) {
+
+    ok = true;
+    for (i = 0; i < out[1].length; ++i) {
+        if (out[1][i].severity !== "warning") {
+            ok = false;
+        }
+    }
+
+    if (!ok) {
         inputCode.focus();
         inputCode.setCursor(out[1][0].from);
     } else {
