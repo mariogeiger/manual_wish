@@ -1,19 +1,21 @@
+"use strict";
+
 function parse(text) {
-    errors = [];
+    var errors = [];
 
-    ch = text.length === 0 ? null : text[0];
-    k = 0;
-    l = 0;
-    c = 0;
+    var ch = text.length === 0 ? null : text[0];
+    var k = 0;
+    var l = 0;
+    var c = 0;
 
-    vmin = null;
-    vmax = null;
-    wishes = null;
+    var vmin = null;
+    var vmax = null;
+    var wishes = null;
 
-    vmin_pos = null;
+    var vmin_pos = null;
 
-    vmin_sum = 0;
-    vmax_sum = 0;
+    var vmin_sum = 0;
+    var vmax_sum = 0;
 
     function eat() {
         if (ch === "\n") {
@@ -48,6 +50,7 @@ function parse(text) {
     }
 
     function eat_row() {
+        var i;
         var cc;
         if (!is_digit(ch)) {
             cc = c;
@@ -60,8 +63,8 @@ function parse(text) {
             return;
         }
 
-        row = [];
-        x = eat_number();
+        var row = [];
+        var x = eat_number();
         if (isNaN(x)) {
             skip_line();
             return;
@@ -158,7 +161,7 @@ function parse(text) {
                     message: "vmax is too small or there is too much entries"
                 });
             }
-            tmp = row.slice();
+            var tmp = row.slice();
             tmp.sort();
             for (i = 0; i < tmp.length; ++i) {
                 if (tmp[i] > i) {
@@ -183,13 +186,13 @@ function parse(text) {
     }
 
     function eat_number() {
-        entry = ch;
+        var entry = ch;
         eat();
         while (is_digit(ch)) {
             entry += ch;
             eat();
         }
-        num = Number(entry);
+        var num = Number(entry);
         if (isNaN(num) || num < 0 || entry[0] === "\n") {
             errors.push({
                 from: CodeMirror.Pos(l, c - entry.length),
@@ -237,7 +240,7 @@ function parse(text) {
         });
     }
 
-    res = {
+    var res = {
         vmin: vmin,
         vmax: vmax,
         wishes: wishes
@@ -305,21 +308,23 @@ function shuffle(a) {
 }
 
 function action(wishes, results) {
-    score = 0;
+    var i;
+    var score = 0;
     for (i = 0; i < wishes.length; ++i) {
         score += Math.pow(wishes[i][results[i]], 2);
     }
     return score;
 }
 
-inputCode = null;
-outputCode = null;
+var inputCode = null;
+var outputCode = null;
 
 function button_pressed() {
-    text = inputCode.getValue();
-    out = parse(text);
+    var i, j, k;
+    var text = inputCode.getValue();
+    var out = parse(text);
 
-    ok = true;
+    var ok = true;
     for (i = 0; i < out[1].length; ++i) {
         if (out[1][i].severity !== "warning") {
             ok = false;
@@ -330,32 +335,33 @@ function button_pressed() {
         inputCode.focus();
         inputCode.setCursor(out[1][0].from);
     } else {
-        vmin = out[0].vmin;
-        vmax = out[0].vmax;
-        wishes = out[0].wishes;
+        var vmin = out[0].vmin;
+        var vmax = out[0].vmax;
+        var wishes = out[0].wishes;
 
-        vmin_tot = 0;
+        var vmin_tot = 0;
         for (i = 0; i < vmin.length; ++i) {
             vmin_tot += vmin[i];
         }
-        vmax_tot = 0;
+        var vmax_tot = 0;
         for (i = 0; i < vmax.length; ++i) {
             vmax_tot += vmax[i];
         }
 
-        permutation = [];
+        var permutation = [];
         for (i = 0; i < wishes.length; ++i) {
             permutation.push(i);
         }
         shuffle(permutation);
 
-        cost = [];
-        x = Math.pow(vmin.length, 2);
+        var cost = [];
+        var x = Math.pow(vmin.length, 2);
 
+        var row;
         for (i = 0; i < wishes.length; ++i) {
             row = [];
             for (j = 0; j < vmin.length; ++j) {
-                c = Math.pow(wishes[i][j], 2);
+                var c = Math.pow(wishes[i][j], 2);
                 for (k = 0; k < vmin[j]; ++k) {
                     row.push(c);
                 }
@@ -381,26 +387,26 @@ function button_pressed() {
         }
 
         var h = new Hungarian(cost);
-        var s = h.execute();
+        var solution = h.execute();
 
-        s.length = wishes.length;
-        for (i = 0; i < s.length; ++i) {
+        solution.length = wishes.length;
+        for (i = 0; i < solution.length; ++i) {
             for (j = 0; j < vmax.length; ++j) {
-                if (s[i] >= vmax[j]) {
-                    s[i] -= vmax[j];
+                if (solution[i] >= vmax[j]) {
+                    solution[i] -= vmax[j];
                 } else {
-                    s[i] = j;
+                    solution[i] = j;
                     break;
                 }
             }
         }
 
-        result = [];
+        var result = [];
         for (i = 0; i < wishes.length; ++i) {
-            result[i] = s[permutation[i]];
+            result[i] = solution[permutation[i]];
         }
 
-        score = action(wishes, result);
+        var score = action(wishes, result);
 
         text = "# attribution,score\n";
         for (i = 0; i < result.length; ++i) {
@@ -411,40 +417,44 @@ function button_pressed() {
         var info = document.getElementById('info');
         info.value = "";
 
-        info.value += "Total score of " + score + ".\n\n";
+        info.value += "Total score : " + score + "\n\n";
 
-        choices = [];
-        for (i = 0; i < vmin.length; ++i) {
-            choices.push(0);
-        }
+        var choices = [];
+        var s;
         for (i = 0; i < result.length; ++i) {
-            choices[wishes[i][result[i]]]++;
+            s = wishes[i][result[i]];
+            if (choices[s] === undefined) {
+                choices[s] = 0;
+            }
+            choices[s]++;
+        }
+        for (j = 0; j < choices.length; ++j) {
+            if (choices[j] === undefined) {
+                choices[j] = 0;
+            }
         }
         info.value += "Satisfaction distribution : " + choices.join(" ") + "\n\n";
 
-        v = [];
-        for (i = 0; i < vmin.length; ++i) {
-            v.push(0);
-        }
-        for (i = 0; i < result.length; ++i) {
-            v[result[i]]++;
-        }
-
-        text = "";
         for (i = 0; i < vmin.length; ++i) {
             choices = [];
-            for (j = 0; j < vmin.length; ++j) {
-                choices.push(0);
-            }
-
+            var counter = 0;
             for (j = 0; j < result.length; ++j) {
                 if (result[j] === i) {
-                    choices[wishes[j][i]]++;
+                    s = wishes[j][i];
+                    if (choices[s] === undefined) {
+                        choices[s] = 0;
+                    }
+                    choices[s]++;
+                    counter++;
                 }
             }
-            text += "workshop " + i + ": " + v[i] + " : " + choices.join(" ") + "\n";
+            for (j = 0; j < choices.length; ++j) {
+                if (choices[j] === undefined) {
+                    choices[j] = 0;
+                }
+            }
+            info.value += "Workshop #" + i + " " + counter + "=" + choices.join("+") + "\n";
         }
-        info.value += text;
     }
 }
 
@@ -458,7 +468,7 @@ function pageDidLoad() {
     inputCode.on("change", function() {
         setCookie("input", inputCode.getValue());
     });
-    cookie = getCookie("input");
+    var cookie = getCookie("input");
     if (cookie !== null) {
         inputCode.setValue(cookie);
     }
