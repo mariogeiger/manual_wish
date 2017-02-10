@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="lib/lint.css">
     <script src="lib/codemirror.js"></script>
     <script src="lib/lint.js"></script>
+    <script src="lib/hungarian.js"></script>
 
     <script src="index.js"></script>
 </head>
@@ -46,12 +47,9 @@
             <h1>Wish</h1>
         </div>
         <div class="row">
-            This page uses NaCl. It works only on Chrome web browser.
-        </div>
-        <div class="row">
             <div class="one-half column">
                 Input
-                <textarea id="input" rows="10" cols="60">16,16,16,16,16,16,16,16,16,16 # vmin
+                <textarea id="input">16,16,16,16,16,16,16,16,16,16 # vmin
 18,18,18,18,18,18,18,18,18,18 # vmax
 2,0,9,8,7,5,6,1,4,3 # student 1
 2,1,3,7,8,5,0,9,6,4 # student 2
@@ -222,28 +220,15 @@
             </div>
             <div class="one-half column">
                 Output
-                <textarea id="output" rows="10" cols="60"></textarea>
+                <textarea id="output"></textarea>
             </div>
         </div>
         <div class="row">
             <input id="button" class="button-primary u-full-width" type="button" onclick="button_pressed()" value="Search">
         </div>
         <div class="row">
-            <textarea id="info" class="u-full-width" readonly="true" style="font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;"></textarea>
+            <textarea id="info" class="u-full-width" readonly="true" style="font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace; height:300px;"></textarea>
         </div>
-        <div class="row">
-            <p>Status <code id="statusField">NO-STATUS</code></p>
-        </div>
-    </div>
-
-    <div id="listener">
-        <script type="text/javascript">
-            var listener = document.getElementById('listener');
-            listener.addEventListener('load', moduleDidLoad, true);
-            listener.addEventListener('message', handleMessage, true);
-        </script>
-
-        <embed id="nacl_module" width="0" height="0" src="wish.nmf" type="application/x-pnacl" />
     </div>
 
     <!-- End Document

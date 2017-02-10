@@ -216,7 +216,7 @@ function parse(text) {
     return [res, errors];
 }
 
-CodeMirror.defineMode("wish_input", function() {
+CodeMirror.defineMode("csv", function() {
     return {
         startState: function() {
             return {
@@ -243,7 +243,7 @@ CodeMirror.defineMode("wish_input", function() {
     };
 });
 
-CodeMirror.registerHelper("lint", "wish_input", function(text) {
+CodeMirror.registerHelper("lint", "csv", function(text) {
     return parse(text)[1];
 });
 
@@ -255,24 +255,13 @@ function action(wishes, results) {
     return score;
 }
 
-Module = null; // Global application object.
-statusText = 'NO-STATUS';
 inputCode = null;
 outputCode = null;
-data = null;
-call_time = 0;
-
-// Indicate load success.
-function moduleDidLoad() {
-    Module = document.getElementById('nacl_module');
-    updateStatus('READY');
-}
 
 function button_pressed() {
     text = inputCode.getValue();
     out = parse(text);
     if (out[1].length === 0) {
-        data = out[0];
         vmin = out[0].vmin;
         vmax = out[0].vmax;
         wishes = out[0].wishes;
@@ -317,102 +306,79 @@ function button_pressed() {
             cost.push(row);
         }
 
-        Module.postMessage(cost);
-        call_time = new Date().getTime();
-    }
-}
+        var h = new Hungarian(cost);
+        var result = h.execute();
 
-function handleMessage(message_event) {
-    result = message_event.data;
-
-    wishes = data.wishes;
-    vmin = data.vmin;
-    vmax = data.vmax;
-    result.length = wishes.length;
-    for (i = 0; i < result.length; ++i) {
-        for (j = 0; j < vmax.length; ++j) {
-            if (result[i] >= vmax[j]) {
-                result[i] -= vmax[j];
-            } else {
-                result[i] = j;
-                break;
+        result.length = wishes.length;
+        for (i = 0; i < result.length; ++i) {
+            for (j = 0; j < vmax.length; ++j) {
+                if (result[i] >= vmax[j]) {
+                    result[i] -= vmax[j];
+                } else {
+                    result[i] = j;
+                    break;
+                }
             }
         }
-    }
 
-    score = action(wishes, result);
+        score = action(wishes, result);
 
-    text = "# attribution,score\n";
-    for (i = 0; i < result.length; ++i) {
-        text += result[i] + "," + wishes[i][result[i]] + "\n";
-    }
-    outputCode.setValue(text);
+        text = "# attribution,score\n";
+        for (i = 0; i < result.length; ++i) {
+            text += result[i] + "," + wishes[i][result[i]] + "\n";
+        }
+        outputCode.setValue(text);
 
-    var info = document.getElementById('info');
-    info.value = "";
+        var info = document.getElementById('info');
+        info.value = "";
 
-    var dt = (new Date().getTime() - call_time) / 1000;
-    info.value += dt + " seconds.\n";
-    info.value += "Total score of " + score + ".\n\n";
+        info.value += "Total score of " + score + ".\n\n";
 
-    choices = [];
-    for (i = 0; i < vmin.length; ++i) {
-        choices.push(0);
-    }
-    for (i = 0; i < result.length; ++i) {
-        choices[wishes[i][result[i]]]++;
-    }
-    info.value += "Satisfaction distribution : " + choices.join(" ") + "\n\n";
-
-    v = [];
-    for (i = 0; i < vmin.length; ++i) {
-        v.push(0);
-    }
-    for (i = 0; i < result.length; ++i) {
-        v[result[i]]++;
-    }
-
-    text = "";
-    for (i = 0; i < vmin.length; ++i) {
         choices = [];
-        for (j = 0; j < vmin.length; ++j) {
+        for (i = 0; i < vmin.length; ++i) {
             choices.push(0);
         }
-
-        for (j = 0; j < result.length; ++j) {
-            if (result[j] === i) {
-                choices[wishes[j][i]]++;
-            }
+        for (i = 0; i < result.length; ++i) {
+            choices[wishes[i][result[i]]]++;
         }
-        text += "workshop " + i + ": " + v[i] + " : " + choices.join(" ") + "\n";
+        info.value += "Satisfaction distribution : " + choices.join(" ") + "\n\n";
+
+        v = [];
+        for (i = 0; i < vmin.length; ++i) {
+            v.push(0);
+        }
+        for (i = 0; i < result.length; ++i) {
+            v[result[i]]++;
+        }
+
+        text = "";
+        for (i = 0; i < vmin.length; ++i) {
+            choices = [];
+            for (j = 0; j < vmin.length; ++j) {
+                choices.push(0);
+            }
+
+            for (j = 0; j < result.length; ++j) {
+                if (result[j] === i) {
+                    choices[wishes[j][i]]++;
+                }
+            }
+            text += "workshop " + i + ": " + v[i] + " : " + choices.join(" ") + "\n";
+        }
+        info.value += text;
     }
-    info.value += text;
 }
 
 function pageDidLoad() {
-    if (Module === null) {
-        updateStatus('LOADING...');
-    } else {
-        updateStatus();
-    }
-
     inputCode = CodeMirror.fromTextArea(document.getElementById('input'), {
         lineNumbers: true,
-        mode: "wish_input",
+        mode: "csv",
         gutters: ["CodeMirror-lint-markers"],
         lint: true
     });
     outputCode = CodeMirror.fromTextArea(document.getElementById('output'), {
         lineNumbers: true,
+        mode: "csv",
         readOnly: true
     });
-}
-
-function updateStatus(opt_message) {
-    if (opt_message)
-        statusText = opt_message;
-    var statusField = document.getElementById('statusField');
-    if (statusField) {
-        statusField.innerHTML = statusText;
-    }
 }
