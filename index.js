@@ -67,7 +67,7 @@ function parse(text) {
         while (is_space(ch)) {
             eat();
         }
-        while (ch === ",") {
+        while (ch === "," || ch === ";") {
             cc = c;
             eat(); // eat the comma
             while (is_space(ch)) {
@@ -235,7 +235,7 @@ CodeMirror.defineMode("csv", function() {
                 state.commentLine = true;
                 return "comment";
             }
-            if (ch === ",") {
+            if (ch === "," || ch === ";") {
                 return "keyword";
             }
             return "atom";
