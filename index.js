@@ -280,23 +280,6 @@ CodeMirror.registerHelper("lint", "csv", function(text) {
     return parse(text)[1];
 });
 
-function getCookie(sName) {
-    var oRegex = new RegExp("(?:; )?" + sName + "=([^;]*);?");
-
-    if (oRegex.test(document.cookie)) {
-        return decodeURIComponent(RegExp.$1);
-    } else {
-        return null;
-    }
-}
-
-function setCookie(sName, sValue) {
-    var today = new Date(),
-        expires = new Date();
-    expires.setTime(today.getTime() + (365 * 24 * 60 * 60 * 1000));
-    document.cookie = sName + "=" + encodeURIComponent(sValue) + ";expires=" + expires.toGMTString();
-}
-
 function shuffle(a) {
     var j, x, i;
     for (i = a.length; i; i--) {
@@ -466,11 +449,11 @@ function pageDidLoad() {
         lint: true
     });
     inputCode.on("change", function() {
-        setCookie("input", inputCode.getValue());
+        localStorage.input = LZString.compressToUTF16(inputCode.getValue());
     });
-    var cookie = getCookie("input");
-    if (cookie !== null) {
-        inputCode.setValue(cookie);
+    var compressed = localStorage.input;
+    if (compressed !== null) {
+        inputCode.setValue(LZString.decompressFromUTF16(compressed));
     }
 
     outputCode = CodeMirror.fromTextArea(document.getElementById('output'), {
