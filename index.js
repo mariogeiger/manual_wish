@@ -452,7 +452,7 @@ function pageDidLoad() {
         localStorage.input = LZString.compressToUTF16(inputCode.getValue());
     });
     var compressed = localStorage.input;
-    if (compressed !== null) {
+    if (compressed !== undefined) {
         inputCode.setValue(LZString.decompressFromUTF16(compressed));
     }
 
