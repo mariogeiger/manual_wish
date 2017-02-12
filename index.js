@@ -369,8 +369,13 @@ function button_pressed() {
             cost.push(row);
         }
 
+        var start_time = new Date().getTime();
         var h = new Hungarian(cost);
         var solution = h.execute();
+        // var solution = ssp(cost);
+        var dt = new Date().getTime() - start_time;
+
+        console.log(dt + " ms");
 
         solution.length = wishes.length;
         for (i = 0; i < solution.length; ++i) {
