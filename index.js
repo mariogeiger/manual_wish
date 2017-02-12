@@ -1,6 +1,5 @@
-"use strict";
-
 function parse(text) {
+    "use strict";
     var errors = [];
 
     var ch = text.length === 0 ? null : text[0];
@@ -249,38 +248,44 @@ function parse(text) {
     return [res, errors];
 }
 
-CodeMirror.defineMode("csv", function() {
-    return {
-        startState: function() {
-            return {
-                commentLine: false
-            };
-        },
-        token: function(stream, state) {
-            if (stream.sol()) {
-                state.commentLine = false;
-            }
-            var ch = stream.next().toString();
-            if (state.commentLine) {
-                return "comment";
-            }
-            if (ch === "#") {
-                state.commentLine = true;
-                return "comment";
-            }
-            if (ch === "," || ch === ";") {
-                return "keyword";
-            }
-            return "atom";
-        }
-    };
-});
+(function() {
+    "use strict";
 
-CodeMirror.registerHelper("lint", "csv", function(text) {
-    return parse(text)[1];
-});
+    CodeMirror.defineMode("csv", function() {
+        return {
+            startState: function() {
+                return {
+                    commentLine: false
+                };
+            },
+            token: function(stream, state) {
+                if (stream.sol()) {
+                    state.commentLine = false;
+                }
+                var ch = stream.next().toString();
+                if (state.commentLine) {
+                    return "comment";
+                }
+                if (ch === "#") {
+                    state.commentLine = true;
+                    return "comment";
+                }
+                if (ch === "," || ch === ";") {
+                    return "keyword";
+                }
+                return "atom";
+            }
+        };
+    });
+
+    CodeMirror.registerHelper("lint", "csv", function(text) {
+        return parse(text)[1];
+    });
+}());
 
 function shuffle(a) {
+    "use strict";
+
     var j, x, i;
     for (i = a.length; i; i--) {
         j = Math.floor(Math.random() * i);
@@ -291,6 +296,8 @@ function shuffle(a) {
 }
 
 function action(wishes, results) {
+    "use strict";
+
     var i;
     var score = 0;
     for (i = 0; i < wishes.length; ++i) {
@@ -303,6 +310,8 @@ var inputCode = null;
 var outputCode = null;
 
 function button_pressed() {
+    "use strict";
+
     var i, j, k;
     var text = inputCode.getValue();
     var out = parse(text);
@@ -337,7 +346,6 @@ function button_pressed() {
         }
         shuffle(permutation);
 
-        var cost = [];
         var x = Math.pow(vmin.length, 2);
         for (i = 0; i < wishes.length; ++i) {
             for (j = 0; j < vmin.length; ++j) {
@@ -345,9 +353,9 @@ function button_pressed() {
             }
         }
 
-        var row;
+        var cost = [];
         for (i = 0; i < wishes.length; ++i) {
-            row = [];
+            var row = [];
             for (j = 0; j < vmin.length; ++j) {
                 var c = Math.pow(wishes[i][j], 2);
                 for (k = 0; k < vmin[j]; ++k) {
@@ -360,20 +368,6 @@ function button_pressed() {
             cost[permutation[i]] = row;
         }
 
-        // append virtual studdent at the end
-        for (i = wishes.length; i < vmax_tot; ++i) {
-            row = [];
-            for (j = 0; j < vmin.length; ++j) {
-                for (k = 0; k < vmin[j]; ++k) {
-                    row.push(x);
-                }
-                for (k = vmin[j]; k < vmax[j]; ++k) {
-                    row.push(0);
-                }
-            }
-            cost.push(row);
-        }
-
         var start_time = new Date().getTime();
         var h = new Hungarian(cost);
         var solution = h.execute();
@@ -382,7 +376,6 @@ function button_pressed() {
 
         console.log(dt + " ms");
 
-        solution.length = wishes.length;
         for (i = 0; i < solution.length; ++i) {
             for (j = 0; j < vmax.length; ++j) {
                 if (solution[i] >= vmax[j]) {
@@ -452,6 +445,8 @@ function button_pressed() {
 }
 
 function pageDidLoad() {
+    "use strict";
+
     inputCode = CodeMirror.fromTextArea(document.getElementById('input'), {
         lineNumbers: true,
         mode: "csv",

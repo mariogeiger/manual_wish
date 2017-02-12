@@ -1,0 +1,10 @@
+{
+    "globals": {
+        "document": false,
+        "CodeMirror": false,
+        "Hungarian": false,
+        "console": false,
+        "localStorage": false,
+        "LZString": false
+    }
+}
