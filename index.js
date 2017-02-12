@@ -339,6 +339,11 @@ function button_pressed() {
 
         var cost = [];
         var x = Math.pow(vmin.length, 2);
+        for (i = 0; i < wishes.length; ++i) {
+            for (j = 0; j < vmin.length; ++j) {
+                x = Math.max(x, Math.pow(wishes[i][j], 2));
+            }
+        }
 
         var row;
         for (i = 0; i < wishes.length; ++i) {
